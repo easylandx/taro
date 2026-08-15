@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Llewellyn Tarot &mdash; A Welsh Mythic Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deep: #10192a;
+    --twilight: #16233a;
+    --forest: #1c3529;
+    --forest-deep: #142720;
+    --mist: #ece4d0;
+    --mist-dim: #cabf9f;
+    --gold: #c9a84c;
+    --gold-bright: #e9cd7f;
+    --gold-dim: #7d6a35;
+    --teal: #3d6b66;
+    --crimson: #8a3f3f;
+    --line: rgba(201,168,76,0.35);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% 0%, #1d2f45 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 15%, #1a3830 0%, transparent 50%),
+      linear-gradient(180deg, var(--deep) 0%, var(--twilight) 35%, var(--forest-deep) 100%);
+    color: var(--mist);
+    font-family: 'EB Garamond', serif;
+    font-size: 18px;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{ font-family:'Cinzel', serif; letter-spacing:.03em; }
+  .numeral{ font-family:'Cinzel Decorative', serif; }
+  a{ color: var(--gold-bright); }
+
+  /* ---------- ambient mist ---------- */
+  .mist-layer{ position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.55; }
+  .mist-layer svg{ width:100%; height:100%; }
+
+  /* ---------- header / hero ---------- */
+  header.hero{
+    position:relative; z-index:1;
+    min-height:88vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding: 6vh 6vw 8vh;
+  }
+  .hero-emblem{ width:150px; height:150px; margin-bottom: 1.4rem; opacity:.95; }
+  header.hero h1{
+    font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+    color: var(--gold-bright);
+    margin: 0 0 .6rem;
+    text-shadow: 0 0 30px rgba(233,205,127,.25);
+  }
+  header.hero .subtitle{
+    font-style: italic; color: var(--mist-dim);
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    max-width: 46em; margin: 0 auto 2.2rem;
+  }
+  .divider{
+    width: 220px; height: 22px; margin: 1rem auto;
+    opacity:.8;
+  }
+  .scroll-cta{
+    display:inline-block; margin-top:1.6rem;
+    border:1px solid var(--line); color:var(--gold-bright);
+    padding:.7em 1.6em; border-radius:2px;
+    text-decoration:none; letter-spacing:.12em; font-size:.8rem; text-transform:uppercase;
+    transition: background .25s, color .25s;
+  }
+  .scroll-cta:hover{ background: var(--gold); color: var(--deep); }
+
+  /* ---------- generic section ---------- */
+  section{ position:relative; z-index:1; max-width: 1080px; margin: 0 auto; padding: 5rem 6vw; }
+  section h2{ font-size: clamp(1.6rem,3vw,2.3rem); color: var(--gold-bright); text-align:center; margin-bottom:.3em; }
+  .section-kicker{ text-align:center; text-transform:uppercase; letter-spacing:.2em; font-size:.75rem; color:var(--teal); font-family:'Cinzel',serif; margin-bottom:.8em; }
+  .lede{ max-width:44em; margin:1.4rem auto 0; text-align:center; color:var(--mist-dim); }
+
+  /* ---------- intro stats ---------- */
+  .intro-grid{ display:grid; grid-template-columns: 1.3fr 1fr; gap: 3rem; margin-top:3rem; align-items:start; }
+  @media(max-width:760px){ .intro-grid{ grid-template-columns:1fr; } }
+  .intro-grid p{ margin:0 0 1.1em; }
+  .facts{ display:grid; grid-template-columns: 1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); }
+  .fact{ background: rgba(16,25,42,.55); padding:1.3em 1em; text-align:center; }
+  .fact b{ display:block; font-family:'Cinzel',serif; font-size:1.5rem; color:var(--gold-bright); }
+  .fact span{ font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--mist-dim); }
+
+  /* ---------- deck / draw interactive ---------- */
+  .deck-wrap{
+    display:flex; flex-direction:column; align-items:center; margin-top: 3rem;
+  }
+  .table{
+    position:relative; width:100%; max-width:520px; height:360px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card{
+    position:absolute; width:180px; height:290px;
+    border-radius:10px; cursor:pointer;
+    box-shadow: 0 12px 30px rgba(0,0,0,.55);
+    transform-style: preserve-3d;
+    transition: transform .55s cubic-bezier(.4,.2,.2,1), left .5s ease, top .5s ease;
+  }
+  .card .face{
+    position:absolute; inset:0; border-radius:10px; backface-visibility:hidden;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    border: 2px solid var(--gold);
+  }
+  .card .back{
+    background: linear-gradient(160deg,#1a2a40,#152417 70%);
+  }
+  .card .front{ transform: rotateY(180deg); background:#111; }
+  .card.flipped{ transform: rotateY(180deg); }
+  .card.reversed.flipped{ transform: rotateY(180deg) rotate(180deg); }
+  #deckPile .card:hover{ filter:brightness(1.12); }
+
+  .deck-controls{ display:flex; gap:1rem; margin-top:2.4rem; flex-wrap:wrap; justify-content:center; }
+  .btn{
+    font-family:'Cinzel',serif; letter-spacing:.1em; text-transform:uppercase; font-size:.82rem;
+    background: transparent; color: var(--gold-bright); border:1px solid var(--gold-dim);
+    padding:.85em 1.8em; border-radius:2px; cursor:pointer; transition: all .25s;
+  }
+  .btn:hover:not(:disabled){ background: var(--gold); color:var(--deep); border-color:var(--gold); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .draw-hint{ margin-top:1.1rem; color:var(--mist-dim); font-style:italic; font-size:.92rem; text-align:center; min-height:1.4em; }
+
+  /* ---------- modal / reveal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(8,12,20,.82); backdrop-filter: blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:50;
+    opacity:0; pointer-events:none; transition: opacity .3s;
+    padding: 3vh 4vw;
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .reveal-card{
+    display:flex; gap:2.2rem; max-width: 780px; width:100%;
+    background: linear-gradient(160deg, rgba(28,42,32,.9), rgba(16,25,42,.92));
+    border:1px solid var(--line); border-radius:8px; padding:2.2rem;
+    max-height: 90vh; overflow:auto;
+  }
+  @media(max-width:680px){ .reveal-card{ flex-direction:column; } }
+  .reveal-art{ flex:0 0 220px; width:220px; height:340px; border-radius:8px; border:2px solid var(--gold); overflow:hidden; }
+  .reveal-art svg{ width:100%; height:100%; }
+  .reveal-text .rc-num{ color:var(--gold); font-size:.85rem; letter-spacing:.15em; text-transform:uppercase; }
+  .reveal-text h3{ margin:.15em 0 0; font-size:1.7rem; color:var(--gold-bright); }
+  .reveal-text .welsh{ font-style:italic; color:var(--teal); margin:.1em 0 1em; font-size:1.05rem; }
+  .orientation-tag{ display:inline-block; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; padding:.3em .8em; border-radius:2px; margin-bottom:1em; }
+  .orientation-tag.up{ background: rgba(61,107,102,.35); color:#a9d8cf; border:1px solid var(--teal); }
+  .orientation-tag.rev{ background: rgba(138,63,63,.35); color:#e6b4b4; border:1px solid var(--crimson); }
+  .reveal-text .blurb{ color: var(--mist-dim); font-style:italic; margin-bottom:1.1em; }
+  .reveal-text .meaning-row{ margin-bottom:.7em; }
+  .reveal-text .meaning-row b{ color: var(--gold-bright); font-family:'Cinzel',serif; font-size:.85rem; text-transform:uppercase; letter-spacing:.06em; }
+  .close-x{
+    position:absolute; top:1.2rem; right:1.6rem; background:none; border:none; color: var(--gold-bright);
+    font-size:1.6rem; cursor:pointer; line-height:1;
+  }
+
+  /* ---------- gallery ---------- */
+  .gallery-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 14px; margin-top: 2.6rem;
+  }
+  .mini{
+    aspect-ratio: 5/8; border-radius:6px; border:1px solid var(--line); cursor:pointer;
+    overflow:hidden; position:relative; transition: transform .2s, border-color .2s;
+  }
+  .mini:hover{ transform: translateY(-4px); border-color: var(--gold); }
+  .mini svg{ width:100%; height:100%; }
+  .mini .mini-label{
+    position:absolute; bottom:0; left:0; right:0; padding:.35em .4em .4em;
+    background: linear-gradient(0deg, rgba(8,12,18,.88), transparent);
+    font-size:.62rem; text-align:center; letter-spacing:.03em; color:var(--mist);
+  }
+
+  /* ---------- structure section ---------- */
+  .suits{ display:grid; grid-template-columns: repeat(4,1fr); gap:1.2rem; margin-top:2.6rem; }
+  @media(max-width:760px){ .suits{ grid-template-columns:1fr 1fr; } }
+  .suit-card{ border:1px solid var(--line); border-radius:6px; padding:1.5rem 1.1rem; text-align:center; background: rgba(255,255,255,.02); }
+  .suit-card svg{ width:52px; height:52px; margin-bottom:.6em; }
+  .suit-card h3{ margin:.2em 0; font-size:1.05rem; color:var(--gold-bright); }
+  .suit-card p{ margin:0; font-size:.85rem; color:var(--mist-dim); }
+
+  .court{ display:grid; grid-template-columns: repeat(4,1fr); gap:1.2rem; margin-top:2rem; }
+  @media(max-width:760px){ .court{ grid-template-columns:1fr 1fr; } }
+  .court-card{ border-left:2px solid var(--gold-dim); padding-left:1rem; }
+  .court-card h4{ margin:0 0 .25em; font-family:'Cinzel',serif; color:var(--gold-bright); font-size:.98rem; }
+  .court-card p{ margin:0; font-size:.85rem; color:var(--mist-dim); }
+
+  footer{ position:relative; z-index:1; text-align:center; padding: 3rem 6vw 4rem; color:var(--mist-dim); font-size:.85rem; }
+  footer .fdiv{ width:160px; margin:0 auto 1.4rem; opacity:.7; }
+</style>
+</head>
+<body>
+
+<div class="mist-layer">
+  <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="mg1" cx="30%" cy="20%" r="60%">
+        <stop offset="0%" stop-color="#3d6b66" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#3d6b66" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="mg2" cx="75%" cy="60%" r="55%">
+        <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.10"/>
+        <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1200" height="900" fill="url(#mg1)"/>
+    <rect width="1200" height="900" fill="url(#mg2)"/>
+  </svg>
+</div>
+
+<header class="hero">
+  <svg class="hero-emblem" viewBox="0 0 200 200" fill="none">
+    <circle cx="100" cy="100" r="92" stroke="var(--gold)" stroke-width="1.5" opacity=".6"/>
+    <circle cx="100" cy="100" r="76" stroke="var(--gold)" stroke-width="1" opacity=".4"/>
+    <!-- triple spiral (triskele) -->
+    <g stroke="var(--gold-bright)" stroke-width="3" fill="none" stroke-linecap="round">
+      <path d="M100,100 C100,80 84,72 70,80 C54,89 54,111 70,120 C82,127 96,122 100,108"/>
+      <path d="M100,100 C122,95 132,78 122,62 C112,47 90,49 83,65 C77,79 84,93 98,97" transform="rotate(120 100 100)"/>
+      <path d="M100,100 C122,95 132,78 122,62 C112,47 90,49 83,65 C77,79 84,93 98,97" transform="rotate(240 100 100)"/>
+    </g>
+  </svg>
+  <h1>The Llewellyn Tarot</h1>
+  <p class="subtitle">A Celtic-mythic re-imagining of the Rider&ndash;Waite&ndash;Smith tradition &mdash; watercolor forests, misty seascapes, and the heroes of the Mabinogion, painted by Anna-Marie Ferguson.</p>
+  <svg class="divider" viewBox="0 0 220 22"><path d="M0,11 H85 M135,11 H220" stroke="var(--gold)" stroke-width="1"/><circle cx="110" cy="11" r="6" fill="none" stroke="var(--gold-bright)" stroke-width="1.5"/><circle cx="110" cy="11" r="2" fill="var(--gold-bright)"/></svg>
+  <a href="#draw" class="scroll-cta">Shuffle the deck &darr;</a>
+</header>
+
+<section id="about">
+  <div class="section-kicker">Origins</div>
+  <h2>A Deck Woven from Welsh Myth</h2>
+  <div class="intro-grid">
+    <div>
+      <p>First published in 2006 by Llewellyn Publications, this deck was commissioned to honor the company's Welsh-born founder, Llewellyn George, and to celebrate the publisher's enduring legacy. Artist Anna-Marie Ferguson spent years researching the <em>Mabinogion</em> and Arthurian romance to give every archetype a home in Welsh legend.</p>
+      <p>The deck keeps the bones of the Rider&ndash;Waite&ndash;Smith system intact &mdash; so a reader fluent in traditional tarot can pick it up immediately &mdash; while dressing every card in ethereal watercolor landscapes: ancient oak forests, standing stones, misted lakes, and wind-worn coastlines. A handful of titles shift to fit the lore: <em>The High Priestess</em> becomes <em>The Priestess</em>, <em>The Devil</em> becomes <em>The Horned One</em>, and <em>The World</em> becomes <em>The Universe</em>.</p>
+    </div>
+    <div class="facts">
+      <div class="fact"><b>78</b><span>Total Cards</span></div>
+      <div class="fact"><b>2006</b><span>First Published</span></div>
+      <div class="fact"><b>22</b><span>Major Arcana</span></div>
+      <div class="fact"><b>56</b><span>Minor Arcana</span></div>
+      <div class="fact"><b>A. M. Ferguson</b><span>Artist</span></div>
+      <div class="fact"><b>Llewellyn</b><span>Publisher</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="draw">
+  <div class="section-kicker">Try a Reading</div>
+  <h2>Shuffle &amp; Draw a Card</h2>
+  <p class="lede">Shuffle the Major Arcana, then click the deck to draw a single card &mdash; upright or reversed &mdash; the way the deck would fall in a real reading.</p>
+
+  <div class="deck-wrap">
+    <div class="table" id="table">
+      <div id="deckPile"></div>
+    </div>
+    <div class="deck-controls">
+      <button class="btn" id="shuffleBtn">Shuffle the Cards</button>
+      <button class="btn" id="drawBtn" disabled>Draw a Card</button>
+    </div>
+    <div class="draw-hint" id="hint">Begin by shuffling the deck.</div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="section-kicker">The Major Arcana</div>
+  <h2>22 Archetypes of the Mabinogion</h2>
+  <p class="lede">Each Major Arcana card is mapped to a figure or tale from Welsh mythology. Click any card to read its meaning.</p>
+  <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<section id="structure">
+  <div class="section-kicker">The Minor Arcana</div>
+  <h2>Four Suits, Sixty-Five Lives</h2>
+  <p class="lede">The 56 Minor Arcana follow the traditional suits &mdash; Wands, Cups, Swords, and Pentacles &mdash; rendered with softer, more psychological imagery than most decks.</p>
+  <div class="suits">
+    <div class="suit-card">
+      <svg viewBox="0 0 60 60"><path d="M30 6 L30 50 M22 14 L38 14 M24 24 L36 24" stroke="var(--gold-bright)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      <h3>Wands</h3>
+      <p>Fire &middot; creativity, ambition, will, and passion</p>
+    </div>
+    <div class="suit-card">
+      <svg viewBox="0 0 60 60"><path d="M18 24 C18 40 42 40 42 24 L42 24 C42 34 18 34 18 24 Z" stroke="var(--gold-bright)" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M18 24 Q30 34 42 24" stroke="var(--gold-bright)" stroke-width="2.5" fill="none"/></svg>
+      <h3>Cups</h3>
+      <p>Water &middot; emotion, intuition, relationships, and love</p>
+    </div>
+    <div class="suit-card">
+      <svg viewBox="0 0 60 60"><path d="M30 6 L30 48 M22 14 L38 14" stroke="var(--gold-bright)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      <h3>Swords</h3>
+      <p>Air &middot; intellect, truth, conflict, and clarity</p>
+    </div>
+    <div class="suit-card">
+      <svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="16" stroke="var(--gold-bright)" stroke-width="2.5" fill="none"/><path d="M30 20 v20 M20 30 h20" stroke="var(--gold-bright)" stroke-width="2"/></svg>
+      <h3>Pentacles</h3>
+      <p>Earth &middot; work, wealth, the body, and the material world</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:3.6rem;">The Court</h2>
+  <p class="lede">Sixteen human archetypes &mdash; four per suit &mdash; carry the emotional and social layer of a reading.</p>
+  <div class="court">
+    <div class="court-card"><h4>Page</h4><p>Eager students and messengers, brimming with raw, untried potential.</p></div>
+    <div class="court-card"><h4>Knight</h4><p>Riders in motion &mdash; fast-moving events, fierce focus, restless energy.</p></div>
+    <div class="court-card"><h4>Queen</h4><p>Soft, receptive, and deeply intuitive command of their element.</p></div>
+    <div class="court-card"><h4>King</h4><p>Established rulers who wield outward authority and practical power.</p></div>
+  </div>
+</section>
+
+<footer>
+  <svg class="fdiv" viewBox="0 0 160 16"><path d="M0,8 H60 M100,8 H160" stroke="var(--gold)" stroke-width="1"/><circle cx="80" cy="8" r="5" fill="none" stroke="var(--gold-bright)"/></svg>
+  <p>A fan-made tribute exploring the imagery and lore of <em>The Llewellyn Tarot</em> by Anna-Marie Ferguson, published by Llewellyn Publications. Not affiliated with or endorsed by the publisher or artist.</p>
+</footer>
+
+<div class="overlay" id="overlay">
+  <div class="reveal-card" id="revealCard" style="position:relative;">
+    <button class="close-x" id="closeBtn">&times;</button>
+    <div class="reveal-art" id="revealArt"></div>
+    <div class="reveal-text" id="revealText"></div>
+  </div>
+</div>
+
+<script>
+/* ============ CARD DATA ============ */
+const CARDS = [
+{n:"0", name:"The Fool", welsh:"Peredur", symbol:"bird", c:["#2a3a52","#0f1826","#e9cd7f"],
+  blurb:"The pure, naïve Arthurian knight embarking on an innocent quest.",
+  up:"New beginnings, innocence, and a leap of faith into the unknown.",
+  rev:"Recklessness, naivety, or hesitation to start."},
+{n:"I", name:"The Magician", welsh:"Gwydion", symbol:"wand", c:["#2e1f45","#150e24","#e9cd7f"],
+  blurb:"The masterful shape-shifting wizard and enchanter of the Fourth Branch of the Mabinogi.",
+  up:"Willpower, manifestation, resourcefulness, and mastery of craft.",
+  rev:"Manipulation, untapped talent, or trickery."},
+{n:"II", name:"The Priestess", welsh:"Ceridwen", symbol:"cauldron", c:["#12313a","#0a1b21","#cfeae3"],
+  blurb:"The medieval keeper of the cauldron of poetic inspiration and magic.",
+  up:"Intuition, hidden knowledge, the subconscious, and mystery.",
+  rev:"Secrets withheld, or disconnection from the inner voice."},
+{n:"III", name:"The Empress", welsh:"Rhiannon", symbol:"horse", c:["#243f2c","#101f15","#e9cd7f"],
+  blurb:"A beautiful woman rides a white horse through a lush landscape, circled by three magical birds whose song can wake the dead and lull the living to sleep.",
+  up:"Luxury, pregnancy, creativity, or abundance. A time to connect with nature and trust your inner grace and personal power.",
+  rev:"Feeling creatively blocked, smothered by a maternal figure, or facing stagnation."},
+{n:"IV", name:"The Emperor", welsh:"Bran the Blessed", symbol:"crown", c:["#3a2c26","#1c1512","#e9cd7f"],
+  blurb:"The giant, protective king of Britain, known for his strength and sacrifice.",
+  up:"Authority, structure, protection, and sacrifice for the greater good.",
+  rev:"Rigidity, domination, or abuse of power."},
+{n:"V", name:"The Hierophant", welsh:"Taliesin", symbol:"book", c:["#40331a","#211a0d","#e9cd7f"],
+  blurb:"The legendary chief bard and prophet who achieved ultimate wisdom.",
+  up:"Tradition, wisdom, spiritual guidance, and teaching.",
+  rev:"Dogma, rebellion against convention, or misinformation."},
+{n:"VI", name:"The Lovers", welsh:"Dream of Macsen Wledig", symbol:"trees", c:["#3c2436","#1e131a","#f0c9a0"],
+  blurb:"An emperor follows a vision to find his true, fated love.",
+  up:"A fated union, harmony, and following a vision of true love.",
+  rev:"Misalignment of values, indecision, or disconnection."},
+{n:"VII", name:"The Chariot", welsh:"Manawydan", symbol:"wheel", c:["#233145","#101a26","#e9cd7f"],
+  blurb:"The patient, clever craftsman who navigates life's struggles with focus.",
+  up:"Willpower, determination, and victory through patient craft.",
+  rev:"Lack of direction, loss of control, or scattered effort."},
+{n:"VIII", name:"Strength", welsh:"Twrch Trwyth", symbol:"boar", c:["#3a1e1e","#1d0f0f","#e0a97c"],
+  blurb:"The legendary, ferocious enchanted wild boar that required immense endurance to hunt.",
+  up:"Courage, endurance, and inner strength tempered with compassion.",
+  rev:"Self-doubt, raw force without control, or exhaustion."},
+{n:"IX", name:"The Hermit", welsh:"Myrddin", symbol:"staff", c:["#1b2338","#0c101c","#cfd7e6"],
+  blurb:"The druidic wizard, often known as Merlin, who seeks solitary spiritual wisdom in the wild.",
+  up:"Introspection, solitary wisdom, and guidance from within.",
+  rev:"Isolation, withdrawal, or refusing counsel."},
+{n:"X", name:"Wheel of Fortune", welsh:"Arianrhod", symbol:"wheelstars", c:["#1a1f3a","#0a0d1c","#e9cd7f"],
+  blurb:"The goddess of the silver wheel, cosmos, and the inescapable spinning of fate.",
+  up:"Destiny, cycles turning in your favor, and welcome change.",
+  rev:"Resistance to change, bad luck, or feeling at fate's mercy."},
+{n:"XI", name:"Justice", welsh:"Lady of the Fountain", symbol:"fountain", c:["#1a3535","#0c1c1c","#cfeae3"],
+  blurb:"A story of truth, balance, and maintaining oaths in the face of destiny.",
+  up:"Truth, fairness, honoring oaths, and balance restored.",
+  rev:"Dishonesty, broken promises, or unfair outcomes."},
+{n:"XII", name:"The Hanged Man", welsh:"Enchantment of Dyfed", symbol:"misttree", c:["#2a2f45","#131625","#cfd7e6"],
+  blurb:"A magical mist forces surrender, waiting, and a change of perspective.",
+  up:"Surrender, a new perspective, and a sacred pause.",
+  rev:"Stalling, resistance to letting go, or needless martyrdom."},
+{n:"XIII", name:"Death", welsh:"Arawn", symbol:"antlersgate", c:["#241426","#100912","#c9a2d6"],
+  blurb:"The noble lord of Annwn, the Welsh underworld, representing transformation and cycles.",
+  up:"Transformation, and endings that make way for renewal.",
+  rev:"Fear of change, stagnation, or resisting the inevitable."},
+{n:"XIV", name:"Temperance", welsh:"Keeper of the Well", symbol:"well", c:["#16302f","#0a1918","#cfeae3"],
+  blurb:"A serene young priestess practicing moderation, flow, and patience.",
+  up:"Balance, patience, and the blending of opposites into harmony.",
+  rev:"Excess, imbalance, or discord."},
+{n:"XV", name:"The Horned One", welsh:"The Wild Herdsman", symbol:"antlersforest", c:["#26301c","#12180d","#c7d68a"],
+  blurb:"A forest master who commands wild beasts, standing in for the primal shadow.",
+  up:"Confronting the shadow self, primal instinct, and material bonds.",
+  rev:"Release from restriction, reclaiming power, or facing temptation."},
+{n:"XVI", name:"The Tower", welsh:"Bala Lake", symbol:"tower", c:["#28202f","#150f1a","#e6b4b4"],
+  blurb:"Folklore of a corrupt town flooded and destroyed beneath the waters.",
+  up:"Sudden upheaval and revelation &mdash; destruction that clears the way.",
+  rev:"An averted disaster, delayed change, or fear of collapse."},
+{n:"XVII", name:"The Star", welsh:"Branwen", symbol:"star", c:["#151c33","#090d1a","#e9cd7f"],
+  blurb:"The tragic, beautiful goddess representing hope, healing, and renewal.",
+  up:"Hope, healing, and renewal after sorrow.",
+  rev:"Despair, lost faith, or disconnection from hope."},
+{n:"XVIII", name:"The Moon", welsh:"Lake of Maidens", symbol:"moon", c:["#1a1f3d","#0b0e1e","#cfd7e6"],
+  blurb:"A watery realm reflecting the subconscious, illusions, and deep intuition.",
+  up:"Intuition, dreams, and navigating illusion and the unconscious.",
+  rev:"Confusion clearing, or hidden truths beginning to surface."},
+{n:"XIX", name:"The Sun", welsh:"Llew Llaw Gyffes", symbol:"sun", c:["#4a3512","#241a08","#ffdf8a"],
+  blurb:"The \"Bringer of Light\" and central solar hero of Welsh legend.",
+  up:"Joy, vitality, success, and radiant clarity.",
+  rev:"Temporary clouds over joy, or delayed success."},
+{n:"XX", name:"Judgement", welsh:"The Sleepers", symbol:"sleepers", c:["#3a2c1e","#1c150e","#e0c48a"],
+  blurb:"Legends of slumbering knights waiting for a call to awaken and rise again.",
+  up:"Awakening &mdash; a call to rise, reckoning and renewal.",
+  rev:"Self-doubt, ignoring the call, or unfinished reckoning."},
+{n:"XXI", name:"The Universe", welsh:"Cadair Idris", symbol:"mountain", c:["#221b3a","#100c1e","#e9cd7f"],
+  blurb:"A striking watercolor of Wales' imposing mountain, an otherworldly gathering place for giants and star-gazers.",
+  up:"Completion, wholeness, and cosmic attainment.",
+  rev:"Incompletion, seeking closure, or delayed fulfillment."}
+];
+
+/* ============ SVG ICON LIBRARY ============ */
+function icon(type){
+  const g = 'stroke="var(--gold-bright)" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
+  switch(type){
+    case "bird": return `<path ${g} d="M60,110 Q90,80 100,60 Q110,80 140,110 M100,60 L100,45"/><circle cx="100" cy="42" r="5" ${g}/>`;
+    case "wand": return `<path ${g} d="M100,150 L100,50"/><path ${g} d="M100,50 C82,55 82,72 100,72 C118,72 118,55 100,50"/><circle cx="100" cy="140" r="6" ${g}/>`;
+    case "cauldron": return `<path ${g} d="M65,110 C65,140 135,140 135,110 L128,150 L72,150 Z"/><path ${g} d="M78,108 L60,95 M122,108 L140,95"/><path ${g} d="M85,55 A15,15 0 1,0 84,54"/>`;
+    case "horse": return `<path ${g} d="M55,135 Q60,90 95,75 Q100,60 115,62 Q112,70 120,75 Q140,85 138,110 L138,135 M75,135 L78,115 M120,135 L124,118"/><circle cx="105" cy="80" r="14" fill="none" ${g}/><path ${g} d="M50,90 Q60,80 60,95 M100,50 Q108,80 130,85 M130,95 Q145,90 145,100"/>`;
+    case "crown": return `<path ${g} d="M60,120 L70,80 L90,105 L100,70 L110,105 L130,80 L140,120 Z"/><path ${g} d="M60,120 L140,120"/>`;
+    case "book": return `<path ${g} d="M100,60 C85,52 65,52 55,58 L55,120 C65,114 85,114 100,122 C115,114 135,114 145,120 L145,58 C135,52 115,52 100,60 Z M100,60 L100,122"/>`;
+    case "trees": return `<path ${g} d="M70,140 L70,120 M55,120 L85,120 M60,105 L80,105 M65,90 L75,90 M130,140 L130,120 M115,120 L145,120 M120,105 L140,105 M125,90 L135,90"/><circle cx="100" cy="75" r="16" ${g}/>`;
+    case "wheel": return `<circle cx="100" cy="100" r="42" ${g}/><circle cx="100" cy="100" r="10" ${g}/><path ${g} d="M100,58 L100,142 M58,100 L142,100 M70,70 L130,130 M130,70 L70,130"/>`;
+    case "boar": return `<path ${g} d="M55,110 C55,85 80,75 105,80 C130,85 145,95 145,110 C145,125 130,130 110,128 C90,130 55,130 55,110 Z"/><path ${g} d="M55,105 L40,95 M55,112 L38,112"/><circle cx="120" cy="98" r="4" fill="var(--gold-bright)"/>`;
+    case "staff": return `<path ${g} d="M100,150 L100,70"/><path ${g} d="M100,70 L92,55 L100,45 L108,55 Z"/><path ${g} d="M80,110 L100,105 L120,110"/>`;
+    case "wheelstars": return `<circle cx="100" cy="100" r="38" ${g}/><path ${g} d="M100,62 L100,138 M62,100 L138,100"/><path ${g} d="M60,55 L64,63 L72,63 L66,68 L68,76 L60,71 L52,76 L54,68 L48,63 L56,63 Z" fill="var(--gold-bright)" stroke="none"/><path ${g} d="M148,130 L151,136 L157,136 L152,140 L154,146 L148,142 L142,146 L144,140 L139,136 L145,136 Z" fill="var(--gold-bright)" stroke="none"/>`;
+    case "fountain": return `<ellipse cx="100" cy="130" rx="45" ry="10" ${g}/><path ${g} d="M70,130 L70,105 Q70,90 100,90 Q130,90 130,105 L130,130"/><path ${g} d="M100,90 L100,55 M85,70 Q100,60 115,70"/>`;
+    case "misttree": return `<path ${g} d="M100,60 L120,90 L108,90 L128,115 L72,115 L92,90 L80,90 Z"/><path ${g} d="M100,115 L100,140"/><path ${g} d="M50,80 Q75,85 100,80 Q125,75 150,82" opacity=".6"/>`;
+    case "antlersgate": return `<path ${g} d="M100,140 L100,80 M100,80 Q80,60 65,65 M100,80 Q75,75 68,90 M100,80 Q120,60 135,65 M100,80 Q125,75 132,90"/><path ${g} d="M65,140 L65,105 Q100,80 135,105 L135,140"/>`;
+    case "well": return `<circle cx="100" cy="105" r="35" ${g}/><path ${g} d="M75,95 Q100,110 125,95 M78,108 Q100,120 122,108"/><path ${g} d="M65,70 L60,55 M135,70 L140,55 M100,60 L100,45"/>`;
+    case "antlersforest": return `<path ${g} d="M100,140 L100,90 M100,90 Q82,70 68,75 M100,90 Q78,85 72,98 M100,90 Q118,70 132,75 M100,90 Q122,85 128,98"/><path ${g} d="M50,140 L50,120 L38,140 L62,140 L50,120 M150,140 L150,120 L138,140 L162,140 L150,120" transform="translate(0,-15) scale(0.6) translate(70,25)"/>`;
+    case "tower": return `<path ${g} d="M78,140 L78,70 L88,70 L88,60 L98,60 L98,70 L102,70 L102,60 L112,60 L112,70 L122,70 L122,140 Z"/><path ${g} d="M50,140 Q75,130 100,140 Q125,130 150,140" opacity=".7"/>`;
+    case "star": return `<path ${g} d="M100,55 L110,85 L142,85 L116,104 L126,135 L100,116 L74,135 L84,104 L58,85 L90,85 Z"/>`;
+    case "moon": return `<path ${g} d="M115,60 A38,38 0 1,0 115,140 A30,30 0 1,1 115,60 Z"/><path ${g} d="M55,130 Q100,118 145,130" opacity=".7"/>`;
+    case "sun": return `<circle cx="100" cy="95" r="24" ${g}/><path ${g} d="M100,55 L100,45 M100,145 L100,135 M60,95 L50,95 M150,95 L140,95 M71,66 L64,59 M129,66 L136,59 M71,124 L64,131 M129,124 L136,131"/>`;
+    case "sleepers": return `<ellipse cx="75" cy="120" rx="28" ry="10" ${g}/><ellipse cx="130" cy="120" rx="28" ry="10" ${g}/><path ${g} d="M150,70 Q170,80 150,95 L150,70 L165,75 Z"/>`;
+    case "mountain": return `<path ${g} d="M50,135 L85,75 L105,105 L120,80 L150,135 Z"/><path ${g} d="M60,55 L64,63 L72,63 L66,68 L68,76 L60,71 L52,76 L54,68 L48,63 L56,63 Z" fill="var(--gold-bright)" stroke="none"/><path ${g} d="M140,50 L143,56 L149,56 L144,60 L146,66 L140,62 L134,66 L136,60 L131,56 L137,56 Z" fill="var(--gold-bright)" stroke="none"/>`;
+    default: return `<circle cx="100" cy="100" r="30" ${g}/>`;
+  }
+}
+
+function cardArtSVG(card, small){
+  const [c1,c2,accent] = card.c;
+  const id = "g"+card.n.replace(/\W/g,'')+(small?"s":"");
+  return `<svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${c1}"/>
+        <stop offset="100%" stop-color="${c2}"/>
+      </linearGradient>
+      <radialGradient id="${id}r" cx="50%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="${accent}" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="200" height="320" fill="url(#${id})"/>
+    <rect width="200" height="320" fill="url(#${id}r)"/>
+    <rect x="10" y="10" width="180" height="300" fill="none" stroke="var(--gold)" stroke-width="1.5" opacity="0.85"/>
+    <rect x="14" y="14" width="172" height="292" fill="none" stroke="var(--gold)" stroke-width="0.6" opacity="0.5"/>
+    <g transform="translate(0,10) scale(0.85)" transform-origin="100 160">${icon(card.symbol)}</g>
+    <text x="100" y="270" text-anchor="middle" font-family="Cinzel Decorative, serif" font-size="20" fill="var(--gold-bright)">${card.n}</text>
+    <text x="100" y="292" text-anchor="middle" font-family="Cinzel, serif" font-size="${small?11:13}" fill="var(--mist)" letter-spacing="1">${card.name}</text>
+  </svg>`;
+}
+function cardBackSVG(){
+  return `<svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="backg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#1c3529"/>
+        <stop offset="100%" stop-color="#16233a"/>
+      </linearGradient>
+      <pattern id="knot" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M0,20 C10,0 30,0 40,20 C30,40 10,40 0,20 Z" fill="none" stroke="#c9a84c" stroke-width="1" opacity="0.35"/>
+      </pattern>
+    </defs>
+    <rect width="200" height="320" fill="url(#backg)"/>
+    <rect width="200" height="320" fill="url(#knot)"/>
+    <rect x="10" y="10" width="180" height="300" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="100" cy="160" r="46" fill="none" stroke="#e9cd7f" stroke-width="2"/>
+    <circle cx="100" cy="160" r="34" fill="none" stroke="#e9cd7f" stroke-width="1" opacity="0.6"/>
+    <g stroke="#e9cd7f" stroke-width="2.2" fill="none" stroke-linecap="round">
+      <path d="M100,160 C100,144 88,138 78,145 C66,153 66,171 78,178 C88,184 98,180 100,169"/>
+      <path d="M100,160 C116,157 124,144 116,132 C108,121 92,123 87,136" transform="rotate(120 100 160)"/>
+      <path d="M100,160 C116,157 124,144 116,132 C108,121 92,123 87,136" transform="rotate(240 100 160)"/>
+    </g>
+  </svg>`;
+}
+
+/* ============ RENDER GALLERY ============ */
+const galleryGrid = document.getElementById('galleryGrid');
+CARDS.forEach((card, i) => {
+  const div = document.createElement('div');
+  div.className = 'mini';
+  div.innerHTML = cardArtSVG(card, true) + `<div class="mini-label">${card.n} &middot; ${card.name}</div>`;
+  div.addEventListener('click', () => openReveal(card, Math.random() < 0.5));
+  galleryGrid.appendChild(div);
+});
+
+/* ============ DECK / SHUFFLE / DRAW ============ */
+const deckPile = document.getElementById('deckPile');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const drawBtn = document.getElementById('drawBtn');
+const hint = document.getElementById('hint');
+let shuffled = false;
+let deckOrder = [];
+
+function buildPile(){
+  deckPile.innerHTML = '';
+  const count = 14;
+  for(let i=0;i<count;i++){
+    const c = document.createElement('div');
+    c.className = 'card back-only';
+    c.style.left = '50%';
+    c.style.top = '50%';
+    c.style.marginLeft = (-90) + 'px';
+    c.style.marginTop = (-145) + 'px';
+    c.style.zIndex = i;
+    c.style.transform = `translate(${(Math.random()*4-2)}px, ${(Math.random()*4-2)}px) rotate(${(Math.random()*3-1.5)}deg)`;
+    c.innerHTML = `<div class="face back">${cardBackSVG()}</div>`;
+    deckPile.appendChild(c);
+  }
+}
+buildPile();
+
+/* audio: soft chime, matching cabin-chime aesthetic */
+let actx;
+function chime(freqs){
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const now = actx.currentTime;
+    freqs.forEach((f, idx) => {
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0, now + idx*0.09);
+      gain.gain.linearRampToValueAtTime(0.09, now + idx*0.09 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx*0.09 + 1.6);
+      osc.connect(gain).connect(actx.destination);
+      osc.start(now + idx*0.09);
+      osc.stop(now + idx*0.09 + 1.7);
+    });
+  }catch(e){}
+}
+
+shuffleBtn.addEventListener('click', () => {
+  shuffleBtn.disabled = true;
+  drawBtn.disabled = true;
+  hint.textContent = 'Shuffling...';
+  const cards = Array.from(deckPile.children);
+  let step = 0;
+  const steps = 8;
+  const iv = setInterval(() => {
+    cards.forEach(c => {
+      const x = (Math.random()*160-80);
+      const y = (Math.random()*70-35);
+      const r = (Math.random()*50-25);
+      c.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg)`;
+    });
+    step++;
+    if(step >= steps){
+      clearInterval(iv);
+      cards.forEach((c,i) => {
+        c.style.transform = `translate(${(Math.random()*4-2)}px, ${(Math.random()*4-2)}px) rotate(${(Math.random()*3-1.5)}deg)`;
+      });
+      deckOrder = [...CARDS].sort(() => Math.random()-0.5);
+      shuffled = true;
+      shuffleBtn.disabled = false;
+      drawBtn.disabled = false;
+      hint.textContent = 'The deck is shuffled. Click "Draw a Card" to reveal your card.';
+      chime([392, 494, 587]);
+    }
+  }, 90);
+});
+
+drawBtn.addEventListener('click', () => {
+  if(!shuffled || deckOrder.length === 0) return;
+  drawBtn.disabled = true;
+  shuffleBtn.disabled = true;
+  const card = deckOrder.pop();
+  const reversed = Math.random() < 0.35;
+  const topCard = deckPile.lastElementChild;
+  if(topCard){
+    topCard.style.transition = 'transform .6s ease, top .6s ease';
+    topCard.style.transform = 'translate(0px,-40px) rotate(0deg)';
+    setTimeout(() => { topCard.remove(); }, 550);
+  }
+  hint.textContent = deckOrder.length > 0
+    ? `${deckOrder.length} cards remain in the deck.`
+    : 'The deck is empty. Shuffle again for a new reading.';
+  setTimeout(() => {
+    openReveal(card, reversed);
+    chime([523, 659, 784]);
+    shuffleBtn.disabled = false;
+    drawBtn.disabled = deckOrder.length === 0;
+  }, 500);
+});
+
+/* ============ REVEAL MODAL ============ */
+const overlay = document.getElementById('overlay');
+const revealArt = document.getElementById('revealArt');
+const revealText = document.getElementById('revealText');
+document.getElementById('closeBtn').addEventListener('click', closeReveal);
+overlay.addEventListener('click', e => { if(e.target === overlay) closeReveal(); });
+
+function openReveal(card, reversed){
+  revealArt.innerHTML = cardArtSVG(card, false);
+  revealArt.style.transform = reversed ? 'rotate(180deg)' : 'none';
+  revealText.innerHTML = `
+    <div class="rc-num">${card.n} &middot; ${card.welsh}</div>
+    <h3>${card.name}</h3>
+    <div class="welsh">${reversed ? 'Reversed' : 'Upright'}</div>
+    <span class="orientation-tag ${reversed?'rev':'up'}">${reversed ? 'Reversed' : 'Upright'}</span>
+    <p class="blurb">${card.blurb}</p>
+    <div class="meaning-row"><b>Upright</b><div>${card.up}</div></div>
+    <div class="meaning-row"><b>Reversed</b><div>${card.rev}</div></div>
+  `;
+  overlay.classList.add('show');
+}
+function closeReveal(){ overlay.classList.remove('show'); }
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeReveal(); });
+</script>
+</body>
+</html>
